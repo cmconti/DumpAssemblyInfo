@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DumpAssemblyInfo
 {
-	class Program
+    class Program
 	{
 		static void Usage()
 		{
@@ -20,7 +16,15 @@ namespace DumpAssemblyInfo
 		{
 			if (args.Length == 0 || !File.Exists(args[0]))
 			{
+				if (!File.Exists(args[0]))
+				{
+					Console.WriteLine();
+					Console.WriteLine($"File not found: '{args[0]}'");
+					Console.WriteLine();
+				}
+
 				Usage();
+				Console.WriteLine();
 				return;
 			}
 			var path = Path.GetFullPath(args[0]);
@@ -41,10 +45,17 @@ namespace DumpAssemblyInfo
 				Console.WriteLine($"\t{attr}");
 			}
 
+			//references
+			Console.WriteLine("References:");
+			foreach (var reference in assembly.GetReferencedAssemblies())
+			{
+				Console.WriteLine($"\t{reference.FullName}");
+			}
+
 			//version
 			var versionInfo = FileVersionInfo.GetVersionInfo(path);
 			string ver = versionInfo.ToString().Replace("\n", "\n\t");
-			Console.WriteLine("Version Info:");
+			Console.WriteLine("Win32 Version Info:");
 			Console.WriteLine($"\t{ver}");
 		}
 	}
