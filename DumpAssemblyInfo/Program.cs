@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -29,7 +30,8 @@ namespace DumpAssemblyInfo
 			}
 			var path = Path.GetFullPath(args[0]);
 
-			var assembly = Assembly.LoadFrom(path);
+			var assembly = Assembly.ReflectionOnlyLoadFrom(path);
+			var cecilAssembly = Mono.Cecil.AssemblyDefinition.ReadAssembly(path);
 
 			//name
 			Console.WriteLine();
@@ -40,16 +42,72 @@ namespace DumpAssemblyInfo
 
 			//attributes
 			Console.WriteLine("Attributes:");
-			foreach (var attr in assembly.CustomAttributes)
+			try
 			{
-				Console.WriteLine($"\t{attr}");
+				//can't use assembly.CustomAttributes for a ReflectionOnlyLoadFrom loaded assembly
+				//var attrs = assembly.CustomAttributes;
+				var attrs = cecilAssembly.CustomAttributes;
+				foreach (var attr in attrs)
+				{
+					var attrType = attr.Constructor.DeclaringType.FullName;
+
+					var ctrArgList = new List<string>();
+					foreach (var arg in attr.ConstructorArguments)
+					{
+						string val = arg.Value.ToString();
+						if (arg.Type.FullName.Contains("System.String"))
+						{
+							val = $"\"{val}\"";
+						}
+						ctrArgList.Add(val);
+					}
+
+					var attrArgs = string.Join(", ", ctrArgList);
+
+					var propList = new List<string>();
+					foreach (var prop in attr.Properties)
+					{
+						string val = prop.Argument.Value.ToString();
+						if (prop.Argument.Type.FullName.Contains("System.String"))
+						{
+							val = $"\"{val}\"";
+						}
+						propList.Add($"{prop.Name} = {val}");
+					}
+					var attrParams = string.Join(", ", propList);
+
+					var argDisplayList = new List<string>();
+					if (ctrArgList.Count > 0)
+					{
+						argDisplayList.Add(attrArgs);
+					}
+					if (propList.Count > 0)
+					{
+						argDisplayList.Add(attrParams);
+					}
+
+					var ctrDisplayArgs = string.Join(", ", argDisplayList);
+
+					Console.WriteLine($"\t[{attrType}({ctrDisplayArgs})]");
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"\tUnavailable (exception:{ex.Message})");
 			}
 
 			//references
 			Console.WriteLine("References:");
-			foreach (var reference in assembly.GetReferencedAssemblies())
+			try
 			{
-				Console.WriteLine($"\t{reference.FullName}");
+				foreach (var reference in assembly.GetReferencedAssemblies())
+				{
+					Console.WriteLine($"\t{reference.FullName}");
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"\tUnavailable (exception:{ex.Message})");
 			}
 
 			//version
