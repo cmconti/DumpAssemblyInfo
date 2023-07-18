@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace DumpAssemblyInfo
 {
-    class Program
+	class Program
 	{
 		static void Usage()
 		{
@@ -15,6 +15,8 @@ namespace DumpAssemblyInfo
 
 		static void Main(string[] args)
 		{
+			Console.OutputEncoding = System.Text.Encoding.UTF8;
+
 			if (args.Length == 0 || !File.Exists(args[0]))
 			{
 				if (!File.Exists(args[0]))
@@ -30,7 +32,22 @@ namespace DumpAssemblyInfo
 			}
 			var path = Path.GetFullPath(args[0]);
 
-			var assembly = Assembly.ReflectionOnlyLoadFrom(path);
+			Assembly assembly = null;
+
+			try
+			{
+				assembly = Assembly.ReflectionOnlyLoadFrom(path);
+			}
+			catch (BadImageFormatException ex)
+			{
+				if (ex.Message.Contains("expected to contain an assembly manifest"))
+				{
+					Console.WriteLine($"'{path}' is not an assembly");
+					return;
+				}
+				throw;
+			}
+
 			var cecilAssembly = Mono.Cecil.AssemblyDefinition.ReadAssembly(path);
 
 			//name
