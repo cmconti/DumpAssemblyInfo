@@ -15,7 +15,7 @@ Example:
 Output:
 
 ```
-Full Name:      DumpAssemblyInfo, Version=1.3.0.0, Culture=neutral, PublicKeyToken=null
+Full Name:      DumpAssemblyInfo, Version=1.4.0.0, Culture=neutral, PublicKeyToken=null
 Runtime version:        v4.0.30319
 Attributes:
         [System.Runtime.Versioning.TargetFrameworkAttribute(".NETFramework,Version=v4.8", FrameworkDisplayName = ".NET Framework 4.8")]
@@ -31,7 +31,7 @@ Attributes:
         [System.Diagnostics.DebuggableAttribute(2)]
         [System.Runtime.CompilerServices.RuntimeCompatibilityAttribute(WrapNonExceptionThrows = True)]
         [System.Runtime.CompilerServices.CompilationRelaxationsAttribute(8)]
-        [System.Reflection.AssemblyFileVersionAttribute("1.3.0.0")]
+        [System.Reflection.AssemblyFileVersionAttribute("1.4.0.0")]
 References:
         mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
         System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
@@ -40,15 +40,26 @@ Win32 Version Info:
         File:             C:\github-personal\DumpAssemblyInfo\DumpAssemblyInfo\bin\Release\DumpAssemblyInfo.exe
         InternalName:     DumpAssemblyInfo.exe
         OriginalFilename: DumpAssemblyInfo.exe
-        FileVersion:      1.3.0.0
+        FileVersion:      1.4.0.0
         FileDescription:  DumpAssemblyInfo
         Product:          DumpAssemblyInfo
-        ProductVersion:   1.3.0.0
+        ProductVersion:   1.4.0.0
         Debug:            False
         Patched:          False
         PreRelease:       False
         PrivateBuild:     False
         SpecialBuild:     False
         Language:         Language Neutral
+Module Info:
+        Assembly version   : 1.4.0.0
+        Version   : v4.0.30319
+        CLR Header: Net_4_0
+        PE(raw)   : I386
+        PE        : PE32
+        CorFlags  : 0x20003
+        ILONLY    : True
+        32BITREQ  : True
+        32BITPREF : True
+        Signed    : False
+        Platform  : x86
 ```
-

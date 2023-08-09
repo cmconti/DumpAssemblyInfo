@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
+using Mono.Cecil;
+
 namespace DumpAssemblyInfo
 {
 	class Program
@@ -48,7 +50,7 @@ namespace DumpAssemblyInfo
 				throw;
 			}
 
-			var cecilAssembly = Mono.Cecil.AssemblyDefinition.ReadAssembly(path);
+			var cecilAssembly = AssemblyDefinition.ReadAssembly(path);
 
 			//name
 			Console.WriteLine();
@@ -129,9 +131,49 @@ namespace DumpAssemblyInfo
 
 			//version
 			var versionInfo = FileVersionInfo.GetVersionInfo(path);
-			string ver = versionInfo.ToString().Replace("\n", "\n\t");
+			string ver = versionInfo.ToString().Trim().Replace("\n", "\n\t");
 			Console.WriteLine("Win32 Version Info:");
 			Console.WriteLine($"\t{ver}");
+
+			//module info
+			//based on https://github.com/sushihangover/CorFlags/blob/master/CorFlags/Program.cs
+			Console.WriteLine("Module Info:");
+			try
+			{
+				var module = ModuleDefinition.ReadModule(path);
+
+				var pe = (module.Architecture == TargetArchitecture.AMD64 || module.Architecture == TargetArchitecture.IA64) ? "PE32+" : "PE32";
+				//	anycpu: PE = PE32  and  32BIT = 0
+				//	   x86: PE = PE32  and  32BIT = 1
+				//	64-bit: PE = PE32+ and  32BIT = 0
+				string platform = string.Empty;
+				switch (pe)
+				{
+					case "PE32":
+						platform = (module.Attributes.HasFlag(ModuleAttributes.Required32Bit)) ? "x86" : "AnyCPU";
+						break;
+					case "PE32+":
+						platform = "x64";
+						break;
+				}
+
+				Console.WriteLine($"\tAssembly version   : {module.Assembly.Name.Version}");
+				Console.WriteLine($"\tVersion   : {module.RuntimeVersion}");
+				Console.WriteLine($"\tCLR Header: {module.Runtime}");
+				Console.WriteLine($"\tPE(raw)   : {module.Architecture}");
+				Console.WriteLine($"\tPE        : {pe}");
+				Console.WriteLine($"\tCorFlags  : 0x{(int)module.Attributes:X}");
+				Console.WriteLine($"\tILONLY    : {module.Attributes.HasFlag(ModuleAttributes.ILOnly)}");
+				Console.WriteLine($"\t32BITREQ  : {module.Attributes.HasFlag(ModuleAttributes.Required32Bit)}");
+				Console.WriteLine($"\t32BITPREF : {module.Attributes.HasFlag(ModuleAttributes.Preferred32Bit)}");
+				Console.WriteLine($"\tSigned    : {module.Attributes.HasFlag(ModuleAttributes.StrongNameSigned)}");
+				Console.WriteLine($"\tPlatform  : {platform}");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"\tUnavailable (exception:{ex.Message})");
+			}
+			Console.WriteLine();
 		}
 	}
 }

@@ -7,6 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DumpAssemblyInfo", "DumpAss
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AD8E7464-3114-47D2-9F94-E1B88D3FDBD4}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
