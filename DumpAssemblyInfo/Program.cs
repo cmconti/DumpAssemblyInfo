@@ -4,35 +4,56 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
+using CommandLine;
+using CommandLine.Text;
+
 using Mono.Cecil;
 
 namespace DumpAssemblyInfo
 {
+	class Options
+	{
+		[Value(index: 0, MetaName = "<path>", Required = true, HelpText = "Assembly file path.")]
+		public string Path { get; set; }
+
+		[Option(shortName: 's', longName: "Sort", Required = false, Default = false, HelpText = "Sort assembly attributes and references alphabetically.")]
+		public bool Sort { get; set; }
+	}
+
 	class Program
 	{
+		static ParserResult<Options> parserResult;
+
 		static void Usage()
 		{
-			Console.WriteLine("Usage: DumpAssemblyInfo <path>");
+			Console.WriteLine(HelpText.AutoBuild<Options>(parserResult, h => h, e => e));
+			Console.WriteLine();
 		}
 
-		static void Main(string[] args)
+		static int Main(string[] args)
+		{
+			parserResult = Parser.Default.ParseArguments<Options>(args);
+
+			return parserResult.MapResult(
+							(Options opts) => DumpInfo(opts.Path, opts.Sort),
+							errs => 1
+						);
+		}
+
+		static int DumpInfo(string path, bool sort)
 		{
 			Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-			if (args.Length == 0 || !File.Exists(args[0]))
-			{
-				if (!File.Exists(args[0]))
-				{
-					Console.WriteLine();
-					Console.WriteLine($"File not found: '{args[0]}'");
-					Console.WriteLine();
-				}
+			path = Path.GetFullPath(path);
 
-				Usage();
+			if (!File.Exists(path))
+			{
 				Console.WriteLine();
-				return;
+				Console.WriteLine($"File not found: '{path}'");
+				Console.WriteLine();
+				Usage();
+				return 1;
 			}
-			var path = Path.GetFullPath(args[0]);
 
 			Assembly assembly = null;
 
@@ -45,7 +66,7 @@ namespace DumpAssemblyInfo
 				if (ex.Message.Contains("expected to contain an assembly manifest"))
 				{
 					Console.WriteLine($"'{path}' is not an assembly");
-					return;
+					return 1;
 				}
 				throw;
 			}
@@ -63,6 +84,8 @@ namespace DumpAssemblyInfo
 			Console.WriteLine("Attributes:");
 			try
 			{
+				var attrDisplayList = new List<string>();
+
 				//can't use assembly.CustomAttributes for a ReflectionOnlyLoadFrom loaded assembly
 				//var attrs = assembly.CustomAttributes;
 				var attrs = cecilAssembly.CustomAttributes;
@@ -107,8 +130,13 @@ namespace DumpAssemblyInfo
 
 					var ctrDisplayArgs = string.Join(", ", argDisplayList);
 
-					Console.WriteLine($"\t[{attrType}({ctrDisplayArgs})]");
+					attrDisplayList.Add($"\t[{attrType}({ctrDisplayArgs})]");
 				}
+
+				if (sort)
+					attrDisplayList.Sort();
+
+				attrDisplayList.ForEach(attr => Console.WriteLine(attr));
 			}
 			catch (Exception ex)
 			{
@@ -119,10 +147,17 @@ namespace DumpAssemblyInfo
 			Console.WriteLine("References:");
 			try
 			{
+				var refDisplayList = new List<string>();
+
 				foreach (var reference in assembly.GetReferencedAssemblies())
 				{
-					Console.WriteLine($"\t{reference.FullName}");
+					refDisplayList.Add($"\t{reference.FullName}");
 				}
+
+				if (sort)
+					refDisplayList.Sort();
+
+				refDisplayList.ForEach(attr => Console.WriteLine(attr));
 			}
 			catch (Exception ex)
 			{
@@ -157,8 +192,8 @@ namespace DumpAssemblyInfo
 						break;
 				}
 
-				Console.WriteLine($"\tAssembly version   : {module.Assembly.Name.Version}");
-				Console.WriteLine($"\tVersion   : {module.RuntimeVersion}");
+				Console.WriteLine($"\tAssembly Version : {module.Assembly.Name.Version}");
+				Console.WriteLine($"\tRuntime Version  : {module.RuntimeVersion}");
 				Console.WriteLine($"\tCLR Header: {module.Runtime}");
 				Console.WriteLine($"\tPE(raw)   : {module.Architecture}");
 				Console.WriteLine($"\tPE        : {pe}");
@@ -174,6 +209,8 @@ namespace DumpAssemblyInfo
 				Console.WriteLine($"\tUnavailable (exception:{ex.Message})");
 			}
 			Console.WriteLine();
+
+			return 0;
 		}
 	}
 }
