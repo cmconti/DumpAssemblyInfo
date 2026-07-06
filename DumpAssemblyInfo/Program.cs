@@ -93,44 +93,52 @@ namespace DumpAssemblyInfo
 				{
 					var attrType = attr.Constructor.DeclaringType.FullName;
 
-					var ctrArgList = new List<string>();
-					foreach (var arg in attr.ConstructorArguments)
+					try
 					{
-						string val = arg.Value.ToString();
-						if (arg.Type.FullName.Contains("System.String"))
+
+						var ctrArgList = new List<string>();
+						foreach (var arg in attr.ConstructorArguments)
 						{
-							val = $"\"{val}\"";
+							string val = arg.Value.ToString();
+							if (arg.Type.FullName.Contains("System.String"))
+							{
+								val = $"\"{val}\"";
+							}
+							ctrArgList.Add(val);
 						}
-						ctrArgList.Add(val);
-					}
 
-					var attrArgs = string.Join(", ", ctrArgList);
+						var attrArgs = string.Join(", ", ctrArgList);
 
-					var propList = new List<string>();
-					foreach (var prop in attr.Properties)
-					{
-						string val = prop.Argument.Value.ToString();
-						if (prop.Argument.Type.FullName.Contains("System.String"))
+						var propList = new List<string>();
+						foreach (var prop in attr.Properties)
 						{
-							val = $"\"{val}\"";
+							string val = prop.Argument.Value.ToString();
+							if (prop.Argument.Type.FullName.Contains("System.String"))
+							{
+								val = $"\"{val}\"";
+							}
+							propList.Add($"{prop.Name} = {val}");
 						}
-						propList.Add($"{prop.Name} = {val}");
-					}
-					var attrParams = string.Join(", ", propList);
+						var attrParams = string.Join(", ", propList);
 
-					var argDisplayList = new List<string>();
-					if (ctrArgList.Count > 0)
+						var argDisplayList = new List<string>();
+						if (ctrArgList.Count > 0)
+						{
+							argDisplayList.Add(attrArgs);
+						}
+						if (propList.Count > 0)
+						{
+							argDisplayList.Add(attrParams);
+						}
+
+						var ctrDisplayArgs = string.Join(", ", argDisplayList);
+
+						attrDisplayList.Add($"\t[{attrType}({ctrDisplayArgs})]");
+					}
+					catch (Exception ex)
 					{
-						argDisplayList.Add(attrArgs);
+						attrDisplayList.Add($"\t[{attrType}(/*Could not decode attribute arguments.*/)] (exception getting arguments:{ex.Message})");
 					}
-					if (propList.Count > 0)
-					{
-						argDisplayList.Add(attrParams);
-					}
-
-					var ctrDisplayArgs = string.Join(", ", argDisplayList);
-
-					attrDisplayList.Add($"\t[{attrType}({ctrDisplayArgs})]");
 				}
 
 				if (sort)
